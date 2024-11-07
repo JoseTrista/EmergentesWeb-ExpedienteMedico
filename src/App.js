@@ -1,23 +1,41 @@
-import logo from './logo.svg';
 import './App.css';
+import React, { useState, useEffect } from 'react';
+import { cargarPacientes } from './Controladores/PacienteControlador';
+import ListaPacientes from './Componentes/ListaPacientes';
+import Login from './Componentes/Login';
+import { autenticarUsuario } from './Controladores/AuthControlador';
 
 function App() {
+  const [pacientes, setPacientes] = useState([]);
+  const [usuario, setUsuario] = useState(null);
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      const pacientes = await cargarPacientes();
+      setPacientes(pacientes);
+    };
+
+    cargarDatos();
+  }, []);
+
+  const manejarLogin = async (credenciales) => {
+    try {
+      const userData = await autenticarUsuario(credenciales);
+      setUsuario(userData);
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {!usuario ? (
+        <Login onLogin={manejarLogin} />
+      ) : usuario.rol === 'medico' ? (
+        <ListaPacientes pacientes={pacientes} />
+      ) : (
+        <div>Bienvenido, {usuario.rol}</div>
+      )}
     </div>
   );
 }
